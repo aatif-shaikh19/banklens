@@ -1,0 +1,62 @@
+name: BankLens 2.0 — dbt CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dbt-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt and security tools
+        run: |
+          pip install --upgrade pip
+          pip install --no-cache-dir \
+            dbt-core==1.9.0 \
+            dbt-bigquery==1.9.0 \
+            pip-audit==2.8.0
+
+      - name: Audit packages for known CVEs
+        run: pip-audit --strict
+
+      - name: Configure GCP credentials
+        env:
+          GCP_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$GCP_CREDENTIALS" > /tmp/gcp_creds.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_creds.json" >> $GITHUB_ENV
+
+      - name: dbt compile
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_DATASET_MARTS: banklens_marts
+        run: |
+          cd dbt_project
+          dbt compile --profiles-dir .
+
+      - name: dbt test
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_DATASET_MARTS: banklens_marts
+        run: |
+          cd dbt_project
+          dbt test --profiles-dir .
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f /tmp/gcp_creds.json
