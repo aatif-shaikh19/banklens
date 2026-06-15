@@ -43,6 +43,26 @@ jobs:
           echo "$GCP_CREDENTIALS" > /tmp/gcp_creds.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_creds.json" >> $GITHUB_ENV
 
+      - name: Create dbt profiles.yml for CI
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          cat > dbt_project/profiles.yml << EOF
+          banklens:
+            target: dev
+            outputs:
+              dev:
+                type: bigquery
+                method: service-account
+                project: "$GCP_PROJECT_ID"
+                dataset: banklens_marts
+                keyfile: /tmp/gcp_creds.json
+                location: US
+                threads: 4
+                timeout_seconds: 300
+          EOF
+          echo "profiles.yml written for CI with project: $GCP_PROJECT_ID"
+
       - name: dbt run -- rebuild all mart tables
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
