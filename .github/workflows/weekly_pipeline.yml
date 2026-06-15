@@ -30,7 +30,7 @@ jobs:
             dbt-bigquery==1.11.1 \
             great-expectations==1.15.2 \
             pandas==3.0.3 \
-            python-dotenv==1.0.1 \
+            python-dotenv==1.2.2 \
             pip-audit==2.8.0
 
       - name: Audit packages for CVEs

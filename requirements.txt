@@ -64,7 +64,7 @@ kaleido==0.2.1
 openai==1.60.2
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 requests==2.32.3
 httpx==0.28.1
 

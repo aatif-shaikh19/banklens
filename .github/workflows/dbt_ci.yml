@@ -29,6 +29,7 @@ jobs:
           pip install --no-cache-dir \
             dbt-core==1.11.6 \
             dbt-bigquery==1.11.1 \
+            python-dotenv==1.2.2 \
             pip-audit==2.8.0
 
       - name: Audit packages for known CVEs
