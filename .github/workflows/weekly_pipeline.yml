@@ -80,6 +80,9 @@ jobs:
           cd dbt_project
           dbt test --profiles-dir .
 
+      - name: Create sample datasets
+        run: python scripts/create_samples.py
+
       - name: Great Expectations quality gate
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
