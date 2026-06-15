@@ -61,6 +61,14 @@ jobs:
           EOF
           echo "profiles.yml written for CI with project: $GCP_PROJECT_ID"
 
+      - name: Install dbt package dependencies
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_DATASET_MARTS: banklens_marts
+        run: |
+          cd dbt_project
+          dbt deps --profiles-dir .
+
       - name: dbt compile -- validates SQL syntax
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
