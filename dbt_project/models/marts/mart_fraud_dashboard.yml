@@ -1,0 +1,14 @@
+version: 2
+models:
+  - name: mart_fraud_dashboard
+    description: >
+      Daily aggregated fraud metrics by product, card network and risk band.
+      Primary data source for Power BI Risk Intelligence and Executive pages.
+      Phase 4 will enrich this with real ML-scored fraud probabilities.
+    columns:
+      - name: txn_date
+        tests:
+          - not_null
+      - name: risk_band
+        tests:
+          - not_null

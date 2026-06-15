@@ -1,0 +1,18 @@
+version: 2
+models:
+  - name: mart_customer_360
+    description: >
+      Unified customer risk + campaign eligibility view.
+      The campaign_eligibility field is the core BankLens 2.0 output:
+      it identifies customers who should be suppressed from campaigns
+      because they carry high fraud risk.
+      Used for Power BI Customer 360 page and Query 5 (killer query).
+    columns:
+      - name: billing_zip
+        tests:
+          - not_null
+      - name: campaign_eligibility
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Suppress — High Risk', 'Review Before Contact', 'Campaign Eligible']

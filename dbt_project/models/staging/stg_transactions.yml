@@ -1,0 +1,29 @@
+version: 2
+models:
+  - name: stg_transactions
+    description: >
+      Cleaned IEEE-CIS transaction data. Renames columns to snake_case,
+      casts types, derives transaction_ts from seconds offset, fills nulls
+      with sentinel values (-999 for time deltas, 0 for count features).
+    columns:
+      - name: transaction_id
+        description: "Unique transaction identifier"
+        tests:
+          - not_null
+          - unique
+      - name: transaction_amt
+        description: "Transaction amount in USD — always positive after filtering"
+        tests:
+          - not_null
+      - name: is_fraud
+        description: "Fraud label: 1=fraud, 0=legitimate"
+        tests:
+          - not_null
+      - name: transaction_ts
+        description: "Derived UTC timestamp from TransactionDT offset (ref: Nov 30 2017)"
+        tests:
+          - not_null
+      - name: card_network
+        description: "Card network: visa, mastercard, amex, discover, or unknown"
+        tests:
+          - not_null

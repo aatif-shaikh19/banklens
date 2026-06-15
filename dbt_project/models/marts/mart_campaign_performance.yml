@@ -1,0 +1,18 @@
+version: 2
+models:
+  - name: mart_campaign_performance
+    description: >
+      Campaign response analytics aggregated by channel, month, age segment,
+      and job category. Primary source for Looker Studio campaign dashboard.
+    columns:
+      - name: contact_channel
+        tests:
+          - not_null
+      - name: response_rate_pct
+        tests:
+          - not_null
+      - name: performance_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['High Performer', 'Average', 'Underperforming']

@@ -1,0 +1,25 @@
+version: 2
+models:
+  - name: stg_campaigns
+    description: >
+      Cleaned UCI Bank Marketing campaign data. Renames columns to snake_case,
+      lowercases all string fields, encodes target y as 1/0 (subscribed).
+      Note: call_duration_seconds is retained for analysis but must NOT be
+      used as a model feature — call duration is unknown before the call.
+    columns:
+      - name: campaign_contact_id
+        description: "Surrogate row identifier (ROW_NUMBER)"
+        tests:
+          - not_null
+          - unique
+      - name: subscribed
+        description: "Target: 1=subscribed to term deposit, 0=did not subscribe"
+        tests:
+          - not_null
+      - name: contact_channel
+        description: "Contact method used"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['cellular', 'telephone']

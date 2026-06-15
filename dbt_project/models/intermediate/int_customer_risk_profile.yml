@@ -1,0 +1,21 @@
+version: 2
+models:
+  - name: int_customer_risk_profile
+    description: >
+      Risk profile per billing_zip + card_network combination.
+      Computes fraud z-score (standard deviations from mean fraud rate)
+      and classifies into risk_band using the risk_band() macro.
+    columns:
+      - name: billing_zip
+        tests:
+          - not_null
+      - name: risk_band
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Low
+                  - Medium
+                  - High
+                  - Critical

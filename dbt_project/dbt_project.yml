@@ -1,0 +1,19 @@
+name: 'banklens'
+version: '2.0.0'
+profile: 'banklens'
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  banklens:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts

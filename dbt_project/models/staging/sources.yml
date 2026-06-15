@@ -1,0 +1,32 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: banklens_raw
+    description: "Raw data loaded by BankLens 2.0 ETL scripts"
+    tables:
+      - name: transactions
+        description: "IEEE-CIS fraud detection transactions (590K rows, 394 columns)"
+        columns:
+          - name: TransactionID
+            description: "Unique transaction identifier — join key with identity table"
+            tests:
+              - not_null
+              - unique
+          - name: TransactionAmt
+            description: "Transaction amount in USD"
+            tests:
+              - not_null
+          - name: isFraud
+            description: "Fraud label: 1=fraud, 0=legitimate. Overall rate ~3.5%"
+            tests:
+              - not_null
+
+      - name: campaigns
+        description: "UCI Bank Marketing campaign contacts (41K rows)"
+        columns:
+          - name: y
+            description: "Subscribed to term deposit: yes or no"
+            tests:
+              - not_null
