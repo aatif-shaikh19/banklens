@@ -158,4 +158,12 @@ FastAPI serves predictions from this model locally
 
 ---
 
+## 8. Non-Goals for v1
+
+- Apache Airflow DAG (documented in docs/ — future scope for production scale-out; replaced in v1 by GitHub Actions scheduled workflow)
+- Real-time streaming ingestion (batch ETL only in v1)
+- Multi-tenant auth on FastAPI (single-user local serving only)
+
+---
+
 *PRD v1.0 — BankLens 1.0 | June 2026 | Full scope restored*
