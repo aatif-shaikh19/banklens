@@ -27,6 +27,7 @@ service_account*
 # ── Data (too large for git) ─────────────────────────────────────────
 data/raw/
 *.csv
+!data/sample/sample_*.csv
 *.parquet
 *.xlsx
 *.zip
@@ -68,3 +69,5 @@ Desktop.ini
 
 # ── Security scanning ────────────────────────────────────────────────
 # Keep .secrets.baseline (it's the reference file, safe to commit)
+
+dbt_project/dbt_packages/
