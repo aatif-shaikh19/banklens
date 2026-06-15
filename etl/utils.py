@@ -1,7 +1,7 @@
 """
 etl/utils.py
-Shared utility functions for BankLens 2.0.
-Handles BigQuery and Snowflake connections using environment variables.
+Shared connection helpers for BankLens 2.0 ETL layer.
+All credentials read from .env via python-dotenv.
 """
 import os
 import logging
@@ -14,15 +14,29 @@ logger = logging.getLogger(__name__)
 
 
 def get_bq_client() -> bigquery.Client:
-    """Return an authenticated BigQuery client using GOOGLE_APPLICATION_CREDENTIALS."""
+    """Return authenticated BigQuery client. Reads GCP_PROJECT_ID from .env."""
     project = os.getenv("GCP_PROJECT_ID")
     if not project:
-        raise ValueError("GCP_PROJECT_ID not set. Did you source your .env?")
+        raise ValueError("GCP_PROJECT_ID not set. Did you fill in .env?")
     return bigquery.Client(project=project)
 
 
+def ensure_bq_dataset(client: bigquery.Client, project: str,
+                       dataset_id: str, location: str = "US") -> None:
+    """Create BigQuery dataset if it does not already exist."""
+    full_id = f"{project}.{dataset_id}"
+    try:
+        client.get_dataset(full_id)
+        logger.info(f"Dataset already exists: {full_id}")
+    except Exception:
+        ds = bigquery.Dataset(full_id)
+        ds.location = location
+        client.create_dataset(ds, timeout=30)
+        logger.info(f"Created dataset: {full_id}")
+
+
 def get_snowflake_conn():
-    """Return an authenticated Snowflake connection using env vars."""
+    """Return authenticated Snowflake connection. All params from .env."""
     required = [
         "SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_PASSWORD",
         "SNOWFLAKE_DATABASE", "SNOWFLAKE_SCHEMA", "SNOWFLAKE_WAREHOUSE"
@@ -30,7 +44,6 @@ def get_snowflake_conn():
     missing = [k for k in required if not os.getenv(k)]
     if missing:
         raise ValueError(f"Missing Snowflake env vars: {missing}")
-
     return snowflake.connector.connect(
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
         user=os.getenv("SNOWFLAKE_USER"),
@@ -41,13 +54,14 @@ def get_snowflake_conn():
     )
 
 
-def bq_row_count(client: bigquery.Client, project: str, dataset: str, table: str) -> int:
-    """Return row count for a BigQuery table."""
+def bq_row_count(client: bigquery.Client, project: str,
+                  dataset: str, table: str) -> int:
+    """Return the current row count for a BigQuery table."""
     result = client.query(
-        f"SELECT COUNT(*) as cnt FROM `{project}.{dataset}.{table}`"
+        f"SELECT COUNT(*) AS cnt FROM `{project}.{dataset}.{table}`"
     ).result()
     return list(result)[0].cnt
 
 
-def log_load_success(table: str, rows: int):
-    logger.info(f"✅  Loaded {rows:,} rows → {table}")
+def log_success(destination: str, rows: int) -> None:
+    logger.info(f"✅  {rows:,} rows loaded → {destination}")
