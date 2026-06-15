@@ -4,6 +4,7 @@ Data quality gate for banklens_raw.campaigns.
 Uses Great Expectations 1.x Fluent API (ephemeral mode).
 Run: python great_expectations/checkpoints/campaigns_checkpoint.py
 """
+
 import sys
 import os
 import pandas as pd
@@ -27,23 +28,15 @@ def run() -> bool:
     context = gx.get_context(mode="ephemeral")
 
     data_source = context.data_sources.add_pandas("campaigns_pandas_source")
-    data_asset  = data_source.add_dataframe_asset("campaigns_dataframe_asset")
-    batch_def   = data_asset.add_batch_definition_whole_dataframe(
-        "campaigns_full_batch"
-    )
+    data_asset = data_source.add_dataframe_asset("campaigns_dataframe_asset")
+    batch_def = data_asset.add_batch_definition_whole_dataframe("campaigns_full_batch")
 
-    suite = context.suites.add(
-        gx.ExpectationSuite(name="campaigns_quality_suite")
-    )
+    suite = context.suites.add(gx.ExpectationSuite(name="campaigns_quality_suite"))
 
     # Target column must only contain yes/no
+    suite.add_expectation(gx.expectations.ExpectColumnValuesToNotBeNull(column="y"))
     suite.add_expectation(
-        gx.expectations.ExpectColumnValuesToNotBeNull(column="y")
-    )
-    suite.add_expectation(
-        gx.expectations.ExpectColumnValuesToBeInSet(
-            column="y", value_set=["yes", "no"]
-        )
+        gx.expectations.ExpectColumnValuesToBeInSet(column="y", value_set=["yes", "no"])
     )
 
     # Proportion of unique values in y — should be exactly 2 (yes and no)
@@ -70,9 +63,7 @@ def run() -> bool:
 
     # No nulls on key columns
     for col in ["age", "job", "contact", "y"]:
-        suite.add_expectation(
-            gx.expectations.ExpectColumnValuesToNotBeNull(column=col)
-        )
+        suite.add_expectation(gx.expectations.ExpectColumnValuesToNotBeNull(column=col))
 
     validation_def = context.validation_definitions.add(
         gx.ValidationDefinition(
@@ -85,16 +76,16 @@ def run() -> bool:
     print("\nRunning Great Expectations validation...")
     result = validation_def.run(batch_parameters={"dataframe": df})
 
-    total  = len(result.results)
+    total = len(result.results)
     passed = sum(1 for r in result.results if r.success)
     failed = total - passed
 
-    print(f"\n{'='*55}")
+    print(f"\n{'=' * 55}")
     print(f"GE Validation Results -- campaigns")
-    print(f"{'='*55}")
+    print(f"{'=' * 55}")
     print(f"Total: {total} | Passed: {passed} | Failed: {failed}")
     print(f"Overall: {result.success}")
-    print(f"{'='*55}")
+    print(f"{'=' * 55}")
 
     if not result.success:
         for r in result.results:
