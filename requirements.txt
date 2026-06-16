@@ -62,6 +62,7 @@ kaleido==0.2.1
 # Snowflake Cortex Analyst (no package needed — built into Snowflake) is
 # the primary AI showcase for HSBC/JPM interviews
 openai==1.60.2
+groq==0.25.0
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
 python-dotenv==1.2.2
