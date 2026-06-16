@@ -1,0 +1,143 @@
+name: banklens_regulatory_model
+
+description: >
+  BankLens 2.0 regulatory analytics semantic model.
+  Covers FDIC bank statistics including NPL ratios, capital adequacy,
+  deposits, profitability, and risk status for US financial institutions.
+
+tables:
+  - name: regulatory
+
+    description: >
+      FDIC quarterly financial statistics per institution.
+      Source: FDIC public API loaded through the BankLens ETL pipeline.
+
+    base_table:
+      database: BANKLENS_DB
+      schema: RAW
+      table: REGULATORY
+
+    dimensions:
+
+      - name: cert_number
+        description: FDIC certificate number
+        expr: CERT_NUMBER
+        data_type: TEXT
+
+      - name: rag_status
+        description: Risk classification based on NPL ratio
+        expr: RAG_STATUS
+        data_type: TEXT
+        sample_values:
+          - Green
+          - Amber
+          - Red
+
+      - name: report_date
+        description: Reporting date
+        expr: REPORT_DATE
+        data_type: TEXT
+
+    facts:
+      - name: total_assets
+        description: Total assets in thousands of USD
+        expr: TOTAL_ASSETS_K
+        data_type: NUMBER
+
+      - name: total_deposits
+        description: Total deposits in thousands of USD
+        expr: TOTAL_DEPOSITS_K
+        data_type: NUMBER
+
+      - name: net_income
+        description: Net income in thousands of USD
+        expr: NET_INCOME_K
+        data_type: NUMBER
+
+      - name: net_loans
+        description: Net loans and leases in thousands of USD
+        expr: NET_LOANS_K
+        data_type: NUMBER
+
+      - name: npl_ratio
+        description: Non-performing loan ratio percentage
+        expr: NPL_RATIO_PCT
+        data_type: NUMBER
+
+      - name: tier1_capital_ratio
+        description: Tier 1 risk-based capital ratio percentage
+        expr: TIER1_CAPITAL_RATIO
+        data_type: NUMBER
+
+    metrics:
+      - name: institution_count
+        description: Count of institutions
+        expr: COUNT(cert_number)
+
+      - name: average_npl_ratio
+        description: Average NPL ratio
+        expr: AVG(npl_ratio)
+
+      - name: average_tier1_capital_ratio
+        description: Average Tier 1 capital ratio
+        expr: AVG(tier1_capital_ratio)
+
+      - name: total_assets_sum
+        description: Sum of total assets
+        expr: SUM(total_assets)
+
+      - name: total_deposits_sum
+        description: Sum of total deposits
+        expr: SUM(total_deposits)
+
+    filters:
+      - name: green_institutions
+        description: Institutions with NPL ratio below 2 percent
+        expr: rag_status = 'Green'
+
+      - name: high_risk_institutions
+        description: Institutions with NPL ratio above 5 percent
+        expr: rag_status = 'Red'
+
+verified_queries:
+  - name: average_tier1_capital_by_rag_status
+
+    question: What is the average Tier 1 capital ratio by RAG status?
+
+    sql: |
+      SELECT
+          RAG_STATUS,
+          ROUND(AVG(NPL_RATIO_PCT), 2) AS AVG_NPL_RATIO,
+          COUNT(*) AS INSTITUTION_COUNT
+      FROM BANKLENS_DB.RAW.REGULATORY
+      GROUP BY RAG_STATUS
+      ORDER BY AVG_NPL_RATIO DESC;
+
+  - name: top_institutions_by_assets
+
+    question: Which are the top 10 institutions by total assets?
+
+    sql: |
+      SELECT
+          CERT_NUMBER,
+          ROUND(TOTAL_ASSETS_K / 1000000, 2) AS TOTAL_ASSETS_BILLIONS,
+          TOTAL_DEPOSITS_K,
+          RAG_STATUS
+      FROM BANKLENS_DB.RAW.REGULATORY
+      ORDER BY TOTAL_ASSETS_K DESC
+      LIMIT 10;
+
+  - name: institutions_with_negative_income
+
+    question: How many institutions have negative net income?
+
+    sql: |
+      SELECT
+          COUNT(*) AS LOSS_MAKING_INSTITUTIONS,
+          ROUND(
+              COUNT(*) * 100.0 /
+              (SELECT COUNT(*) FROM BANKLENS_DB.RAW.REGULATORY),
+              2
+          ) AS PCT_OF_TOTAL
+      FROM BANKLENS_DB.RAW.REGULATORY
+      WHERE NET_INCOME_K < 0;
